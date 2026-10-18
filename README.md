@@ -82,7 +82,7 @@ By hand, add a local (stdio) MCP server:
     "gifos-broadcast": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "git+https://github.com/nwcnwc/gifos-broadcast-mcp.git#b6571f9480f004fbac1a75ee8735bfbc9b328d99"],
+      "args": ["-y", "git+https://github.com/nwcnwc/gifos-broadcast-mcp.git#1ec0f8396ff1f2a745764a0822ccbfc368ad3530"],
       "env": { "npm_config_ignore_scripts": "true", "ONNXRUNTIME_NODE_INSTALL_CUDA": "skip", "GIFOS_URL": "https://gifos.app" }
     }
   }

@@ -65,10 +65,10 @@ export function registerBroadcastTools(server, ctx) {
 
   server.registerTool('join_broadcast', {
     title: 'The note-taking bot watches a broadcast',
-    description: 'Meet Bot opens a GifOS broadcast link as a viewer and writes down what is said on the Stage. It never goes on air. Use wait_lines or get_transcript to follow it.',
+    description: 'Meeting Bot opens a GifOS broadcast link as a viewer and writes down what is said on the Stage. It never goes on air. Use wait_lines or get_transcript to follow it.',
     inputSchema: {
       link: z.string().url().max(2048).describe('The GifOS broadcast link (…/run.html#v=…&bc=1).'),
-      topic: z.string().max(200).optional(),
+      topic: z.string().max(200).optional().describe('A name for this broadcast in the local list.'),
     },
   }, guarded(async ({ link, topic }) => {
     if (!roomFromLink(link) || !linkParams(link).get('bc')) return fail('That is not a GifOS broadcast link (expected …/run.html#v=<room>&…&bc=1).');
@@ -126,7 +126,7 @@ export function registerBroadcastTools(server, ctx) {
     inputSchema: {
       meeting_id: meetingId,
       start: z.string().max(64).describe('ISO with an offset, a local time read in timezone, or empty to clear.'),
-      timezone: z.string().max(80).optional(),
+      timezone: z.string().max(80).optional().describe('IANA time zone, for example America/Chicago. Default UTC.'),
     },
   }, guarded(async ({ meeting_id, start, timezone }) => {
     const at = start ? parseWhen(start, timezone || 'UTC') : null;

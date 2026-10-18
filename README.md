@@ -50,6 +50,8 @@ You need **Node.js 20 or newer** and **Google Chrome or Microsoft Edge** (see *T
 npx -y github:nwcnwc/gifos-broadcast-mcp
 ```
 
+`npx` with a `github:` address downloads the package through git. Install git first.
+
 or from a clone:
 
 ```sh
@@ -80,12 +82,14 @@ By hand, add a local (stdio) MCP server:
     "gifos-broadcast": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "github:nwcnwc/gifos-broadcast-mcp"],
+      "args": ["-y", "git+https://github.com/nwcnwc/gifos-broadcast-mcp.git#b6571f9480f004fbac1a75ee8735bfbc9b328d99"],
       "env": { "npm_config_ignore_scripts": "true", "ONNXRUNTIME_NODE_INSTALL_CUDA": "skip", "GIFOS_URL": "https://gifos.app" }
     }
   }
 }
 ```
+
+That pin is the same commit as `.mcp.json`. `npx github:` needs git.
 
 It can run next to gifos-meet-mcp; give each its own `GIFOS_MCP_HOME` if both run at once.
 
@@ -261,11 +265,13 @@ every booth action is one call with no confirmation argument.
 **2. Full end-to-end test against a local GifOS** (what the maintainers run; see [runs/](runs/)).
 
 ```sh
-git clone https://github.com/nwcnwc/gifos-app.git ../gifos-app
+git clone --branch release/0.9.23 --single-branch https://github.com/nwcnwc/gifos-app.git ../gifos-app
 git clone https://github.com/nwcnwc/gifos-apps-source.git ../gifos-apps-source
 GIFOS_APP_DIR=../gifos-app MEETING_BOT_SRC=../gifos-apps-source/meeting-bot \
-E2E_RELAY=wss://your-gifos-0.9.23b-relay E2E_VIDEO=/path/to/short-clip.webm npm run test:e2e
+E2E_VIDEO=/path/to/short-clip.webm npm run test:e2e
 ```
+
+Leave `E2E_RELAY` unset. The test uses the GifOS site's own relay, and a client on this computer can use the live relay.
 
 It serves the GifOS checkout on `127.0.0.1:19512` with Meeting Bot in its store, runs this server over stdio,
 and checks with a separate viewer browser: the early-viewer countdown, the booth opening off air, go live (the

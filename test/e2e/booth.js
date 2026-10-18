@@ -5,7 +5,8 @@
 // check reads what the viewer's own page, or the bot's lines, show.
 //
 //   GIFOS_APP_DIR=../gifos-app MEETING_BOT_SRC=../gifos-apps-source/meeting-bot \
-//   E2E_RELAY=wss://your-gifos-0.9.23b-relay E2E_VIDEO=/path/clip.webm npm run test:e2e
+//   E2E_VIDEO=/path/clip.webm npm run test:e2e
+// Omit E2E_RELAY to use the GifOS site's own relay. A localhost client can use the live relay.
 //
 // The GifOS checkout is served on 127.0.0.1:E2E_SITE_PORT (19512) with
 // Meeting Bot and two tiny speech apps added to its store (nothing is
@@ -48,8 +49,8 @@ async function until(fn, ms) {
   return v;
 }
 
-if ((!GIVEN_URL && (!SITE_DIR || !BOT_SRC)) || !RELAY || !VIDEO) {
-  console.error('Set GIFOS_APP_DIR and MEETING_BOT_SRC (or GIFOS_URL / E2E_GIFOS_URL), plus E2E_RELAY and E2E_VIDEO.');
+if ((!GIVEN_URL && (!SITE_DIR || !BOT_SRC)) || !VIDEO) {
+  console.error('Set GIFOS_APP_DIR and MEETING_BOT_SRC (or GIFOS_URL / E2E_GIFOS_URL), plus E2E_VIDEO. E2E_RELAY is optional.');
   process.exit(2);
 }
 fs.mkdirSync(PROOF, { recursive: true });
@@ -87,13 +88,13 @@ try {
   }
   const noise = path.join(home, 'noise.wav');
   noiseWav(noise);
-  say('site ' + SITE + ' from ' + path.basename(SITE_DIR) + '; relay ' + RELAY);
+  say('site ' + SITE + ' from ' + path.basename(SITE_DIR) + '; relay ' + (RELAY || '(GifOS default)'));
 
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: [path.join(REPO, 'bin', 'gifos-broadcast-mcp.js')],
     env: {
-      ...process.env, GIFOS_URL: SITE, GIFOS_RELAY: RELAY, GIFOS_MCP_HOME: home, GIFOS_MCP_LAZY: '1',
+      ...process.env, GIFOS_URL: SITE, ...(RELAY ? { GIFOS_RELAY: RELAY } : {}), GIFOS_MCP_HOME: home, GIFOS_MCP_LAZY: '1',
       GIFOS_STT_APP: 'stt-synthetic', GIFOS_TTS_APP: 'tts-synthetic', GIFOS_BOOTH_FAKE_MEDIA: '1', GIFOS_BOOTH_AUDIO_FILE: noise,
     },
     stderr: 'pipe',

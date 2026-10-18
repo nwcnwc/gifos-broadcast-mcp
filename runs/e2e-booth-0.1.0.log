@@ -1,0 +1,18 @@
+   0.1s site http://127.0.0.1:19512 from gifos-app; relay ws://127.0.0.1:9890
+   0.9s PASS — create_broadcast gives a watch link with the start and Visit  (http://127.0.0.1:19512/run.html#v=bwodj00r2sf5cbroovalilb0&av=a854ad865ddcf189a73c4c2a&bc=1&at=1792301810&visit=https%3A%2F%2Fexample.org%2Fvisit&relay=ws%3A%2F%2F127.0.0.1%3A9890)
+   1.4s PASS — an early viewer reads when it starts, with a countdown  (The service starts today at 10:36 PM · in 2 h 5 min.)
+   3.8s PASS — open_booth: the booth is the host, off air  ({"open":true,"host":true,"on_air":false,"prerecorded":null,"camera":false,"microphone":false,"badge":"off","air":"Service · You are off air","watching":"1 watching","status":"You are live · 720p · blurred until you set a viewer password","start":"Starts today at 10:36 PM","visit":"Visit link · examp)
+   3.8s PASS — before go_live the viewer is not watching anyone live  (off)
+   3.8s PASS — go_live: the booth is on air  ({"open":true,"host":true,"on_air":true,"prerecorded":null,"camera":true,"microphone":true,"badge":"live","air":"Service · You are live","watching":"1 watching","status":"You are live · 720p · blurred until you set a viewer password","start":"Starts today at 10:36 PM","visit":"Visit link · example.or)
+   3.8s PASS — the host page's badge says LIVE  (live)
+   7.5s PASS — the viewer sees the host's live picture and reads WATCHING  (watching)
+  20.7s PASS — join_broadcast: Meeting Bot watches the broadcast  ({"meeting_id":"m_02ec0efdc4","topic":"Booth test","start_time":"2026-10-18T05:36:50.187Z","link":"http://127.0.0.1:19512/run.html#v=bwodj00r2sf5cbroovalilb0&av=a854ad865ddcf189a73c4c2a&bc=1&at=1792301810&visit=https%3A%2F%2Fexample.org%2Fvisit&relay=ws%3A%2F%2F127.0.0.1%3A9890","state":"live","trans)
+  24.3s PASS — wait_lines returns what the host said, credited to the host  ({"seq":1,"ts":"2026-10-18T03:32:13.758Z","meeting_id":"m_02ec0efdc4","kind":"speech","speaker":"Pastor Kim","text":"Can you hear this synthetic speech?","to_bot":true})
+  24.3s PASS — get_transcript has the host's line  (Pastor Kim: Can you hear this synthetic speech?)
+  24.6s PASS — play_video: the booth plays the file  (Prerecorded · clip · starting…)
+  24.9s PASS — the viewer sees Prerecorded  (PRERECORDED)
+  25.0s PASS — stop_video: the video stops  ({"open":true,"host":true,"on_air":true,"prerecorded":null,"camera":true,"microphone":true,"badge":"live","air":"Service · You are live","watching":"2 watching","status":"Rebroadcast stopped.","start":"Starts today at 10:36 PM","visit":"Visit link · example.org","ended":false,"page_errors":[]})
+  28.3s PASS — end_broadcast: the booth ends it and closes  ({"open":true,"host":true,"on_air":false,"prerecorded":null,"camera":false,"microphone":false,"badge":"off","air":"Service · You are off air","watching":"2 watching","status":"Rebroadcast stopped.","start":"Starts today at 10:36 PM","visit":"Visit link · example.org","ended":true,"page_errors":[]})
+  28.3s PASS — the viewer reads that the broadcast has ended  (The service has ended.)
+  28.4s PASS — end_meeting takes the bot out and keeps its transcript  ({"meeting_id":"m_02ec0efdc4","topic":"Booth test","start_time":"2026-10-18T05:36:50.187Z","link":"http://127.0.0.1:19512/run.html#v=bwodj00r2sf5cbroovalilb0&av=a854ad865ddcf189a73c4c2a&bc=1&at=1792301810&visit=https%3A%2F%2Fexample.org%2Fvisit&relay=ws%3A%2F%2F127.0.0.1%3A9890","state":"ended","tran)
+  28.5s ALL PASS

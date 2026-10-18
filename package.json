@@ -1,0 +1,32 @@
+{
+  "name": "gifos-broadcast-mcp",
+  "version": "0.1.0",
+  "description": "GifOS broadcasts for Grok Bot: a self-run MCP server that makes broadcast links with full invite details, runs the host booth (go live, play a video, start time, Visit link, end), and follows the broadcast live with a note-taking bot. No hosted endpoint, no model key.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "gifos-broadcast-mcp": "bin/gifos-broadcast-mcp.js"
+  },
+  "main": "src/server.js",
+  "files": ["bin", "src", "assets", "skills", ".grok-plugin", ".mcp.json", "README.md", "LICENSE"],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node bin/gifos-broadcast-mcp.js",
+    "test": "node test/unit/run.js test/unit/tools.test.js",
+    "test:e2e": "node test/e2e/booth.js"
+  },
+  "keywords": ["mcp", "gifos", "broadcast", "livestream", "grok-bot"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nwcnwc/gifos-broadcast-mcp.git"
+  },
+  "homepage": "https://github.com/nwcnwc/gifos-broadcast-mcp#readme",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "gifos-mcp-core": "git+https://github.com/nwcnwc/gifos-mcp-core.git#93340956bdecbb2127415d02fc759fe5363766bd",
+    "playwright": "1.61.1",
+    "zod": "3.25.76"
+  }
+}

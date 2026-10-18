@@ -1,0 +1,14 @@
+{
+  "name": "gifos-broadcast",
+  "version": "0.1.0",
+  "description": "GifOS broadcasts for Grok Bot, run on your own computer: make broadcast links with full invite details (no join, nothing sent), run the host booth (go live, play a video live, start time, Visit link, end), and follow the broadcast with a note-taking bot. No hosted endpoint, no account, no model key.",
+  "author": {
+    "name": "GifOS",
+    "url": "https://gifos.app"
+  },
+  "homepage": "https://github.com/nwcnwc/gifos-broadcast-mcp#readme",
+  "repository": "https://github.com/nwcnwc/gifos-broadcast-mcp",
+  "license": "MIT",
+  "keywords": ["gifos", "broadcast", "livestream", "service", "town hall", "mcp", "self-hosted"],
+  "logo": "assets/logo.svg"
+}

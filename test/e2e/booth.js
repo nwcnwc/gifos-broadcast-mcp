@@ -16,6 +16,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { launchInstalled } from 'gifos-mcp-core';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { packApp, startSite } from './site.js';
@@ -107,7 +108,7 @@ try {
   check('create_broadcast gives a watch link with the start and Visit', /bc=1/.test(made.watch_url) && /at=\d+/.test(made.watch_url) && /visit=/.test(made.watch_url), made.watch_url);
 
   // A viewer early: the link alone says when it starts.
-  viewerBrowser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
+  viewerBrowser = (await launchInstalled((o) => chromium.launch(o), { args: ['--autoplay-policy=no-user-gesture-required'] }, {})).browser;
   const vctx = await viewerBrowser.newContext({ viewport: { width: 1280, height: 720 } });
   await vctx.addInitScript(() => { localStorage.setItem('gifos_name', 'Ruth'); sessionStorage.setItem('gifos_appeared', '1'); });
   const viewer = await vctx.newPage();

@@ -10,7 +10,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright';
-import { log } from 'gifos-mcp-core';
+import { log, launchInstalled } from 'gifos-mcp-core';
 
 const DEFAULT_WAIT = 30000;
 
@@ -38,8 +38,12 @@ export class BoothPool {
     if (this.cameraFile) args.push('--use-file-for-fake-video-capture=' + path.resolve(this.cameraFile));
     if (this.audioFile) args.push('--use-file-for-fake-audio-capture=' + path.resolve(this.audioFile));
     const opts = { headless: this.cfg.headless !== false, args };
-    if (this.cfg.chrome) opts.executablePath = this.cfg.chrome;
-    this.starting = (this.launchFn ? this.launchFn(opts) : chromium.launch(opts)).then((b) => {
+    // The browser already on this computer (GIFOS_CHROME, Chrome, Edge); never a download.
+    const started = this.launchFn
+      ? this.launchFn(opts).then((b) => ({ browser: b, used: 'test' }))
+      : launchInstalled((o) => chromium.launch(o), opts, this.cfg);
+    this.starting = started.then(({ browser: b, used }) => {
+      log('booth browser: ' + used);
       this.browser = b;
       this.starting = null;
       return b;

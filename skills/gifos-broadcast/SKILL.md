@@ -39,6 +39,12 @@ is not clearly what they asked for.
 If the user goes live from their own phone or computer instead, they open the same link with the host
 password; you can still make links, set nothing in the booth, and follow along with the bot.
 
+## How the bot looks
+
+- The operator may set its name and picture (`GIFOS_BOT_NAME`, `GIFOS_BOT_PICTURE`). If the user asks for another
+  name or picture, call `set_bot_profile` with `name` and/or `picture_path` (a GIF, PNG, JPEG or WebP file, at most
+  256 KB) before the bot joins; a new name is refused while the bot is in a room.
+
 ## Follow what is said
 
 - `join_broadcast` with the link: Meet Bot watches as a viewer and writes down what is said on the Stage.

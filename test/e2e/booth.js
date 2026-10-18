@@ -157,9 +157,24 @@ try {
 
   const ended = await call('end_broadcast', { meeting_id: made.meeting_id });
   check('end_broadcast: the booth ends it and closes', ended.ended === true, JSON.stringify(ended.booth));
+  // The booth closes the host's seat right after End. Read the viewer once
+  // that seat has left its page (the DEBUG trace records the drop): the
+  // ended word must outlive the seat that said it. Read too early and the
+  // check passes on the host's last pulse alone.
+  const gone = await until(() => viewer.evaluate(() => (window.__bcTrace || []).some((e) => e.ev === 'drop' && e.bcend)), 30000);
+  check('the host\'s seat leaves the viewer\'s page after End', !!gone, JSON.stringify(await viewer.evaluate(() => (window.__bcTrace || []).slice(-6))));
   const over = await until(() => viewer.evaluate(() => { const e = document.getElementById('bc-ended'); const t = document.getElementById('bc-ended-txt'); return e && !e.hidden && /ended/.test(t.textContent) ? t.textContent : ''; }), 30000);
   check('the viewer reads that the broadcast has ended', /ended/.test(over || ''), over || (await viewer.evaluate(() => (document.getElementById('status') || {}).textContent)));
   await viewer.screenshot({ path: path.join(PROOF, 'viewer-ended.png') });
+  // A viewer who opens the link after the host's seat is gone hears the
+  // ended word from the people still watching (Ruth, Meeting Bot).
+  const lctx = await viewerBrowser.newContext({ viewport: { width: 1280, height: 720 } });
+  await lctx.addInitScript(() => { localStorage.setItem('gifos_name', 'Late Lou'); sessionStorage.setItem('gifos_appeared', '1'); });
+  const late = await lctx.newPage();
+  await late.goto(made.watch_url + '&debug=on', { waitUntil: 'domcontentloaded', timeout: 60000 });
+  const lateOver = await until(() => late.evaluate(() => { const e = document.getElementById('bc-ended'); const t = document.getElementById('bc-ended-txt'); return e && !e.hidden && /ended/.test(t.textContent) ? t.textContent : ''; }), 30000);
+  check('a viewer who comes after the host left reads that it has ended', /ended/.test(lateOver || ''), lateOver || (await late.evaluate(() => (document.getElementById('bc-ended-txt') || {}).textContent)));
+  await late.screenshot({ path: path.join(PROOF, 'late-viewer-ended.png') });
   const left = await call('end_meeting', { meeting_id: bot.meeting_id });
   check('end_meeting takes the bot out and keeps its transcript', left.state === 'ended' && left.transcript_lines > 0, JSON.stringify(left));
 } catch (e) {

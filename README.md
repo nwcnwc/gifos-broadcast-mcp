@@ -242,6 +242,8 @@ The resource `gifos://meeting/{id}/transcript` is the live transcript as newline
 | `No Chrome or Edge on this computer` | Install Google Chrome, or run `npx playwright install chromium` once, or set `GIFOS_CHROME`. The server never downloads a browser. |
 | Anything else | `GIFOS_HEADLESS=0` shows the browser windows. |
 
+The booth e2e (`test/e2e/booth.js`) serves a local site unless `GIFOS_URL` or `E2E_GIFOS_URL` is already set.
+
 ## Testing instructions for marketplace reviewers
 
 **1. Unit tests (no network, no browser).**

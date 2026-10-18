@@ -26,7 +26,8 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 const SITE_DIR = process.env.GIFOS_APP_DIR ? path.resolve(process.env.GIFOS_APP_DIR) : '';
 const BOT_SRC = process.env.MEETING_BOT_SRC ? path.resolve(process.env.MEETING_BOT_SRC) : '';
 const SITE_PORT = Number(process.env.E2E_SITE_PORT || 19512);
-const SITE = 'http://127.0.0.1:' + SITE_PORT;
+const GIVEN_URL = String(process.env.E2E_GIFOS_URL || process.env.GIFOS_URL || '').replace(/\/$/, '');
+const SITE = GIVEN_URL || ('http://127.0.0.1:' + SITE_PORT);
 const RELAY = String(process.env.E2E_RELAY || '');
 const VIDEO = process.env.E2E_VIDEO ? path.resolve(process.env.E2E_VIDEO) : '';
 const PROOF = path.resolve(process.env.E2E_PROOF_DIR || path.join(REPO, '.e2e', 'proof'));
@@ -47,8 +48,8 @@ async function until(fn, ms) {
   return v;
 }
 
-if (!SITE_DIR || !BOT_SRC || !RELAY || !VIDEO) {
-  console.error('Set GIFOS_APP_DIR, MEETING_BOT_SRC, E2E_RELAY and E2E_VIDEO.');
+if ((!GIVEN_URL && (!SITE_DIR || !BOT_SRC)) || !RELAY || !VIDEO) {
+  console.error('Set GIFOS_APP_DIR and MEETING_BOT_SRC (or GIFOS_URL / E2E_GIFOS_URL), plus E2E_RELAY and E2E_VIDEO.');
   process.exit(2);
 }
 fs.mkdirSync(PROOF, { recursive: true });
@@ -72,15 +73,18 @@ function noiseWav(dest) {
 }
 
 try {
-  const logo = fs.readFileSync(path.join(REPO, 'assets', 'logo-512.png'));
-  const extra = [{ slug: 'meeting-bot', ...(await packApp(BOT_SRC, SITE_DIR, ['manifest.json', 'index.html', 'app.js', 'protocol.js', 'voice.js', 'help.md', 'CONTROL.md', 'listing.json'])), cover: logo }];
-  for (const [slug, files] of [['stt-synthetic', SYNTH_STT], ['tts-synthetic', SYNTH_TTS]]) {
-    const dir = path.join(home, slug);
-    fs.mkdirSync(dir);
-    for (const [n, t] of Object.entries(files)) fs.writeFileSync(path.join(dir, n), t);
-    extra.push({ slug, ...(await packApp(dir, SITE_DIR, ['manifest.json', 'index.html'])), cover: logo });
+  if (GIVEN_URL) say('using GIFOS_URL ' + SITE + ' (no local site)');
+  const logo = GIVEN_URL ? null : fs.readFileSync(path.join(REPO, 'assets', 'logo-512.png'));
+  if (!GIVEN_URL) {
+    const extra = [{ slug: 'meeting-bot', ...(await packApp(BOT_SRC, SITE_DIR, ['manifest.json', 'index.html', 'app.js', 'protocol.js', 'voice.js', 'help.md', 'CONTROL.md', 'listing.json'])), cover: logo }];
+    for (const [slug, files] of [['stt-synthetic', SYNTH_STT], ['tts-synthetic', SYNTH_TTS]]) {
+      const dir = path.join(home, slug);
+      fs.mkdirSync(dir);
+      for (const [n, t] of Object.entries(files)) fs.writeFileSync(path.join(dir, n), t);
+      extra.push({ slug, ...(await packApp(dir, SITE_DIR, ['manifest.json', 'index.html'])), cover: logo });
+    }
+    site = await startSite({ siteDir: SITE_DIR, port: SITE_PORT, extraApps: extra });
   }
-  site = await startSite({ siteDir: SITE_DIR, port: SITE_PORT, extraApps: extra });
   const noise = path.join(home, 'noise.wav');
   noiseWav(noise);
   say('site ' + SITE + ' from ' + path.basename(SITE_DIR) + '; relay ' + RELAY);

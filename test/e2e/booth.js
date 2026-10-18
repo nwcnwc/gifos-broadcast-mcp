@@ -168,8 +168,13 @@ try {
   // check passes on the host's last pulse alone.
   const gone = await until(() => viewer.evaluate(() => (window.__bcTrace || []).some((e) => e.ev === 'drop' && e.bcend)), 30000);
   check('the host\'s seat leaves the viewer\'s page after End', !!gone, JSON.stringify(await viewer.evaluate(() => (window.__bcTrace || []).slice(-6))));
-  const over = await until(() => viewer.evaluate(() => { const e = document.getElementById('bc-ended'); const t = document.getElementById('bc-ended-txt'); return e && !e.hidden && /ended/.test(t.textContent) ? t.textContent : ''; }), 30000);
-  check('the viewer reads that the broadcast has ended', /ended/.test(over || ''), over || (await viewer.evaluate(() => (document.getElementById('status') || {}).textContent)));
+  const over = await until(() => viewer.evaluate(() => {
+    const line = document.getElementById('bc-stage-line');
+    const txt = line ? line.textContent : '';
+    if (/starts|not started|countdown|in \d/.test(txt)) return '';
+    return txt === 'The stage is clear.' ? txt : '';
+  }), 30000);
+  check('the viewer reads that the stage is clear', over === 'The stage is clear.', over || (await viewer.evaluate(() => (document.getElementById('bc-stage-line') || {}).textContent)));
   await viewer.screenshot({ path: path.join(PROOF, 'viewer-ended.png') });
   // A viewer who opens the link after the host's seat is gone hears the
   // ended word from the people still watching (Ruth, Meeting Bot).
@@ -177,8 +182,13 @@ try {
   await lctx.addInitScript(() => { localStorage.setItem('gifos_name', 'Late Lou'); sessionStorage.setItem('gifos_appeared', '1'); });
   const late = await lctx.newPage();
   await late.goto(made.watch_url + '&debug=on', { waitUntil: 'domcontentloaded', timeout: 60000 });
-  const lateOver = await until(() => late.evaluate(() => { const e = document.getElementById('bc-ended'); const t = document.getElementById('bc-ended-txt'); return e && !e.hidden && /ended/.test(t.textContent) ? t.textContent : ''; }), 30000);
-  check('a viewer who comes after the host left reads that it has ended', /ended/.test(lateOver || ''), lateOver || (await late.evaluate(() => (document.getElementById('bc-ended-txt') || {}).textContent)));
+  const lateOver = await until(() => late.evaluate(() => {
+    const line = document.getElementById('bc-stage-line');
+    const txt = line ? line.textContent : '';
+    if (/starts|not started|countdown|in \d/.test(txt)) return '';
+    return txt === 'The stage is clear.' ? txt : '';
+  }), 30000);
+  check('a viewer who comes after the host left reads that the stage is clear', lateOver === 'The stage is clear.', lateOver || (await late.evaluate(() => (document.getElementById('bc-stage-line') || {}).textContent)));
   await late.screenshot({ path: path.join(PROOF, 'late-viewer-ended.png') });
   const left = await call('end_meeting', { meeting_id: bot.meeting_id });
   check('end_meeting takes the bot out and keeps its transcript', left.state === 'ended' && left.transcript_lines > 0, JSON.stringify(left));

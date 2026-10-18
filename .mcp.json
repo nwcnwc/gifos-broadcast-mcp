@@ -5,7 +5,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "git+https://github.com/nwcnwc/gifos-broadcast-mcp.git#23b91f8efdbfc55fec52abe367693a6bd8c1414a"
+        "git+https://github.com/nwcnwc/gifos-broadcast-mcp.git#e6ab2fd438488729dd3af836dd4c1e35351a6ec1"
       ],
       "env": {
         "npm_config_ignore_scripts": "true",

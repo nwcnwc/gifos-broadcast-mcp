@@ -8,13 +8,14 @@
 // what to confirm with its user. Each description says what it does.
 import { z } from 'zod';
 import {
-  meetingId, newRoom, hostKey, broadcastLink, roomFromLink, linkParams, cleanVisit, plainLink,
+  meetingIdFor, newRoom, hostKey, broadcastLink, roomFromLink, linkParams, cleanVisit, plainLink,
   broadcastInvite, parseWhen, publicView, scrub,
 } from 'gifos-mcp-core';
 
 const hostPassword = z.string().min(1).max(200).describe('The host password of this broadcast. Used to hold the host key while the call runs; never stored, logged or returned.');
 
 export function registerBroadcastTools(server, ctx) {
+  const meetingId = meetingIdFor('gifos-broadcast-mcp');
   const { cfg, meetings, ok, fail, guarded, need, secrets, joinByLink } = ctx;
   const booths = ctx.booths;
   const hide = (...extra) => secrets().concat(extra.filter(Boolean));

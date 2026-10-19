@@ -185,14 +185,14 @@ Shared tools (from gifos-mcp-core, the same in gifos-broadcast-mcp):
 The resource `gifos://meeting/{id}/transcript` is the live transcript as newline-delimited JSON; subscribe for
 `notifications/resources/updated`.
 
-## Example: a Sunday service
+## Example: a Monday broadcast
 
-1. The user says: *"Set up our Sunday service at 10, with the giving link, and tell the congregation."*
-   Grok Bot calls `create_broadcast({ title: "Sunday service", host_password, start: "2026-10-25T10:00",
-   timezone: "America/Chicago", visit_url: "https://example.org/give" })` and sends `invite.text` through the
+1. The user says: *"Set up our Monday all-hands at 10, with the visit link, and tell the team."*
+   Grok Bot calls `create_broadcast({ title: "Monday all-hands", host_password, start: "2026-10-25T10:00",
+   timezone: "America/Chicago", visit_url: "https://example.org/visit" })` and sends `invite.text` through the
    user's own channels after the user approves.
 2. At 9:55 Grok Bot calls `open_booth` and `join_broadcast`. When the user says go, `go_live`.
-3. During the service Grok Bot follows `wait_lines`. Afterwards, `end_broadcast` (after checking with the user)
+3. During the broadcast Grok Bot follows `wait_lines`. Afterwards, `end_broadcast` (after checking with the user)
    and `play_video` later in the day to rebroadcast the recording live, if the user wants that.
 
 ## Privacy and security

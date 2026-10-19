@@ -280,4 +280,4 @@ viewer sees the picture), Meeting Bot writing down the host's words through `wai
 
 ## License
 
-MIT. GifOS, Meeting Bot and Kokoro are separate projects with their own licenses.
+Copyright (c) 2026 Crowd Concepts, Inc. All rights reserved. See [LICENSE](LICENSE). GifOS, Meeting Bot and Kokoro are separate projects with their own licenses.

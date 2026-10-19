@@ -8,7 +8,7 @@
   },
   "homepage": "https://github.com/nwcnwc/gifos-broadcast-mcp#readme",
   "repository": "https://github.com/nwcnwc/gifos-broadcast-mcp",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "keywords": ["gifos", "broadcast", "livestream", "service", "town hall", "mcp", "self-hosted"],
   "logo": "assets/logo.svg"
 }

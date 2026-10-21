@@ -40,7 +40,7 @@
   "homepage": "https://github.com/nwcnwc/gifos-broadcast-mcp#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.1",
-    "gifos-mcp-core": "git+https://github.com/nwcnwc/gifos-mcp-core.git#8fb585babc3c111757744d13dadbf5b810cb3d88",
+    "gifos-mcp-core": "git+https://github.com/nwcnwc/gifos-mcp-core.git#2168f937866e466ab44c9eb28009523274cdca74",
     "playwright": "1.61.1",
     "zod": "3.25.76"
   },

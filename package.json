@@ -23,7 +23,7 @@
   },
   "scripts": {
     "start": "node bin/gifos-broadcast-mcp.js",
-    "test": "node test/unit/run.js test/unit/tools.test.js",
+    "test": "node test/unit/run.js test/unit/tools.test.js test/unit/lock-pin.test.js",
     "test:e2e": "node test/e2e/booth.js"
   },
   "keywords": [

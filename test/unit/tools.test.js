@@ -82,18 +82,18 @@ test('the broadcast tools and the shared tools are listed, with no confirmation 
 
 test('create_broadcast returns the watch link and every invite detail, with nothing live, joined or sent', async () => {
   const r = json(await call('create_broadcast', {
-    title: 'Sunday service', host_password: HOST_PW, start: '2026-10-25T10:00', timezone: 'America/Chicago',
+    title: 'Sunday service', host_password: HOST_PW, start: '2027-10-25T10:00', timezone: 'America/Chicago',
     description: 'Live from the hall.', visit_url: 'https://example.org/give', host_name: 'Pastor Kim',
   }));
   const p = linkParams(r.watch_url);
   assert.equal(p.get('bc'), '1');
   assert.match(p.get('av'), /^[0-9a-f]{24}$/);
-  assert.equal(p.get('at'), String(Date.parse('2026-10-25T15:00:00Z') / 1000));
+  assert.equal(p.get('at'), String(Date.parse('2027-10-25T15:00:00Z') / 1000));
   assert.equal(p.get('visit'), 'https://example.org/give');
   const key = await hostKey(p.get('v'), HOST_PW);
   assert.equal(p.get('av'), key.verifier, 'the link carries the verifier of this host password');
   assert.equal(r.invite.kind, 'broadcast');
-  assert.equal(r.invite.start.local, '2026-10-25 10:00');
+  assert.equal(r.invite.start.local, '2027-10-25 10:00');
   assert.equal(r.invite.watch_url, r.watch_url);
   assert.match(r.invite.text, /Watch: /);
   const raw = JSON.stringify(r) + fs.readFileSync(path.join(home, 'meetings.json'), 'utf8');
@@ -106,6 +106,9 @@ test('create_broadcast returns the watch link and every invite detail, with noth
   const bad = await call('create_broadcast', { title: 'x', host_password: HOST_PW, visit_url: 'http://example.org' });
   assert.equal(bad.isError, true);
   assert.match(text(bad), /https/);
+  const past = await call('create_broadcast', { title: 'Yesterday', host_password: HOST_PW, start: '2020-01-01T10:00', timezone: 'America/Chicago' });
+  assert.equal(past.isError, true, 'a start in the past is refused');
+  assert.match(text(past), /in the past/);
 });
 
 test('the booth opens only with the host password the broadcast was made with, and every action is one call', async () => {
@@ -124,8 +127,8 @@ test('the booth opens only with the host password the broadcast was made with, a
   const vid = path.join(home, 'clip.webm'); fs.writeFileSync(vid, 'x');
   assert.match(json(await call('play_video', { meeting_id: r.meeting_id, path: vid })).booth.prerecorded, /Prerecorded/);
   json(await call('stop_video', { meeting_id: r.meeting_id }));
-  const at = json(await call('set_start_time', { meeting_id: r.meeting_id, start: '2026-10-25T10:00', timezone: 'America/Chicago' }));
-  assert.equal(at.start, '2026-10-25T15:00:00.000Z');
+  const at = json(await call('set_start_time', { meeting_id: r.meeting_id, start: '2027-10-25T10:00', timezone: 'America/Chicago' }));
+  assert.equal(at.start, '2027-10-25T15:00:00.000Z');
   json(await call('set_start_time', { meeting_id: r.meeting_id, start: '' }));
   assert.equal(json(await call('set_visit_link', { meeting_id: r.meeting_id, url: 'https://example.org/give' })).visit_url, 'https://example.org/give');
   assert.equal((await call('set_visit_link', { meeting_id: r.meeting_id, url: 'javascript:alert(1)' })).isError, true);

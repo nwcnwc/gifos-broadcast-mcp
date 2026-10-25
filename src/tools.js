@@ -9,7 +9,7 @@
 import { z } from 'zod';
 import {
   meetingIdFor, newRoom, hostKey, broadcastLink, roomFromLink, linkParams, cleanVisit, plainLink,
-  broadcastInvite, parseWhen, publicView, scrub,
+  broadcastInvite, parseWhen, publicView, scrub, assertNotPast,
 } from 'gifos-mcp-core';
 
 const hostPassword = z.string().min(1).max(200).describe('The host password of this broadcast. Used to hold the host key while the call runs; never stored, logged or returned.');
@@ -59,6 +59,7 @@ export function registerBroadcastTools(server, ctx) {
     const visit = cleanVisit(args.visit_url || '');
     const link = plainLink(broadcastLink(cfg.gifosUrl, room, { relay: cfg.relay, verifier: key.verifier, startAt: at, visit, stream: !!args.stream }), '');
     const invite = broadcastInvite({ title: args.title, link, start: args.start, end: args.end, timezone: zone, description: args.description, visit, stream: !!args.stream, hostName: args.host_name });
+    assertNotPast(invite);
     const m = meetings.add({ topic: args.title, room, link, start_time: invite.start ? invite.start.iso : null });
     return okHidden({ meeting_id: m.meeting_id, watch_url: link, invite }, args.host_password, key.seedHex);
   }));

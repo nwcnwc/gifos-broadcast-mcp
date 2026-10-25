@@ -5,7 +5,7 @@ import { registerBroadcastTools } from './tools.js';
 import { BoothPool } from './booth.js';
 
 export const NAME = 'gifos-broadcast-mcp';
-export const VERSION = '0.1.2';
+export const VERSION = '0.1.3';
 export const HTTP_PORT = 19521;
 export const README = 'https://github.com/nwcnwc/gifos-broadcast-mcp#readme';
 

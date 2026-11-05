@@ -30,8 +30,7 @@
     "mcp",
     "gifos",
     "broadcast",
-    "livestream",
-    "grok-bot"
+    "livestream"
   ],
   "repository": {
     "type": "git",

@@ -47,10 +47,10 @@ Grok Bot ──MCP (stdio)──▶ gifos-broadcast-mcp ─┬▶ booth: the hos
 You need **Node.js 20 or newer** and **Google Chrome or Microsoft Edge** (see *The browser* below).
 
 ```sh
-npx -y github:nwcnwc/gifos-broadcast-mcp
+npx -y npm@11.6.2 exec -y -- github:nwcnwc/gifos-broadcast-mcp#2af97d7fbf610405af8c999ca381510a705a4ba5
 ```
 
-`npx` with a `github:` address downloads the package through git. Install git first.
+The npm in Node 22 (10.9) fails on any `npx github:` package, hence `npm@11.6.2 exec`; with npm 11 or newer, `npx -y github:nwcnwc/gifos-broadcast-mcp` (the newest commit) works directly.
 
 or from a clone:
 
@@ -82,14 +82,14 @@ By hand, add a local (stdio) MCP server:
     "gifos-broadcast": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "git+https://github.com/nwcnwc/gifos-broadcast-mcp.git#1ec0f8396ff1f2a745764a0822ccbfc368ad3530"],
+      "args": ["-y", "npm@11.6.2", "exec", "-y", "--", "github:nwcnwc/gifos-broadcast-mcp#2af97d7fbf610405af8c999ca381510a705a4ba5"],
       "env": { "npm_config_ignore_scripts": "true", "ONNXRUNTIME_NODE_INSTALL_CUDA": "skip", "GIFOS_URL": "https://gifos.app" }
     }
   }
 }
 ```
 
-That pin is the same commit as `.mcp.json`. `npx github:` needs git.
+That pin is the same commit as `.mcp.json` (the code commit just before the commit that pins it). It runs through npm 11 (`npm@11.6.2 exec`) because the npm that ships with Node 22 (10.9) cannot run a package straight from GitHub with `npx` ("GitFetcher requires an Arborist constructor").
 
 It can run next to gifos-meet-mcp; give each its own `GIFOS_MCP_HOME` if both run at once.
 

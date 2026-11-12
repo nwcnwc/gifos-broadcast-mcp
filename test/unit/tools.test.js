@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { loadConfig, MeetingStore, hostKey, linkParams } from 'gifos-mcp-core';
+import { loadConfig, MeetingStore, hostKey, linkParams, roomFromLink } from 'gifos-mcp-core';
 import { createServer } from '../../src/server.js';
 import { tmpHome } from './fixtures/tmp-home.js';
 
@@ -30,7 +30,7 @@ class FakeBooths {
   async open(m, key, opts) {
     this.calls.push(['open', m.meeting_id, key.verifier, opts.hostName || null]);
     const calls = this.calls;
-    const state = { open: true, on_air: false, prerecorded: null, start: 'Start time', visit: 'Visit link', ended: false };
+    const state = { open: true, on_air: false, prerecorded: null, start: 'Start time', ended: false };
     const b = {
       key,
       state: async () => ({ ...state }),
@@ -67,10 +67,11 @@ test('the broadcast tools and the shared tools are listed, with no confirmation 
   const { tools } = await client.listTools();
   const names = tools.map((t) => t.name);
   for (const n of ['create_broadcast', 'join_broadcast', 'open_booth', 'go_live', 'play_video', 'stop_video', 'set_start_time',
-    'set_visit_link', 'end_broadcast', 'booth_status', 'close_booth', 'wait_lines', 'say', 'get_transcript', 'schedule_meeting']) {
+    'end_broadcast', 'booth_status', 'close_booth', 'wait_lines', 'say', 'get_transcript', 'schedule_meeting']) {
     assert.ok(names.includes(n), n);
   }
-  for (const n of ['confirm_action', 'set_voice', 'create_meeting']) assert.equal(names.includes(n), false, n);
+  // GifOS 0.9.26 dropped the Visit link: no tool for it.
+  for (const n of ['confirm_action', 'set_voice', 'create_meeting', 'set_visit_link']) assert.equal(names.includes(n), false, n);
   for (const t of tools) {
     assert.equal(t.inputSchema.type, 'object', t.name);
     assert.ok(t.description && t.description.length > 30, t.name);
@@ -83,13 +84,13 @@ test('the broadcast tools and the shared tools are listed, with no confirmation 
 test('create_broadcast returns the watch link and every invite detail, with nothing live, joined or sent', async () => {
   const r = json(await call('create_broadcast', {
     title: 'Sunday service', host_password: HOST_PW, start: '2027-10-25T10:00', timezone: 'America/Chicago',
-    description: 'Live from the hall.', visit_url: 'https://example.org/give', host_name: 'Pastor Kim',
+    description: 'Live from the hall.', host_name: 'Pastor Kim',
   }));
   const p = linkParams(r.watch_url);
   assert.equal(p.get('bc'), '1');
   assert.match(p.get('av'), /^[0-9a-f]{24}$/);
   assert.equal(p.get('at'), String(Date.parse('2027-10-25T15:00:00Z') / 1000));
-  assert.equal(p.get('visit'), 'https://example.org/give');
+  assert.equal(p.get('visit'), null);
   const key = await hostKey(p.get('v'), HOST_PW);
   assert.equal(p.get('av'), key.verifier, 'the link carries the verifier of this host password');
   assert.equal(r.invite.kind, 'broadcast');
@@ -100,12 +101,11 @@ test('create_broadcast returns the watch link and every invite detail, with noth
   assert.equal(raw.includes(HOST_PW), false, 'the host password is not returned or stored');
   assert.equal(raw.includes(key.seedHex), false, 'nor is the host key');
   assert.equal(bot.calls.length + booths.calls.length, 0);
-  const s = json(await call('create_broadcast', { title: 'Friday night', host_password: HOST_PW, stream: true }));
-  assert.equal(linkParams(s.watch_url).get('st'), '1');
-  assert.equal(s.invite.kind, 'stream');
-  const bad = await call('create_broadcast', { title: 'x', host_password: HOST_PW, visit_url: 'http://example.org' });
-  assert.equal(bad.isError, true);
-  assert.match(text(bad), /https/);
+  // No start: the short /cast/<room>/<verifier> link GifOS 0.9.26 hands out.
+  const s = json(await call('create_broadcast', { title: 'Friday night', host_password: HOST_PW, stream: true, visit_url: 'https://example.org' }));
+  assert.match(s.watch_url, /\/cast\/[0-9a-z]{24}\/[0-9a-f]{24}$/);
+  assert.equal(s.invite.kind, 'broadcast');
+  assert.equal(JSON.stringify(s).includes('example.org'), false, 'old Visit and Stream options are ignored');
   const past = await call('create_broadcast', { title: 'Yesterday', host_password: HOST_PW, start: '2020-01-01T10:00', timezone: 'America/Chicago' });
   assert.equal(past.isError, true, 'a start in the past is refused');
   assert.match(text(past), /in the past/);
@@ -130,13 +130,11 @@ test('the booth opens only with the host password the broadcast was made with, a
   const at = json(await call('set_start_time', { meeting_id: r.meeting_id, start: '2027-10-25T10:00', timezone: 'America/Chicago' }));
   assert.equal(at.start, '2027-10-25T15:00:00.000Z');
   json(await call('set_start_time', { meeting_id: r.meeting_id, start: '' }));
-  assert.equal(json(await call('set_visit_link', { meeting_id: r.meeting_id, url: 'https://example.org/give' })).visit_url, 'https://example.org/give');
-  assert.equal((await call('set_visit_link', { meeting_id: r.meeting_id, url: 'javascript:alert(1)' })).isError, true);
   const ended = json(await call('end_broadcast', { meeting_id: r.meeting_id }));
   assert.equal(ended.ended, true);
   assert.equal(json(await call('booth_status', { meeting_id: r.meeting_id })).booth.open, false);
-  const key = await hostKey(linkParams(r.watch_url).get('v'), HOST_PW);
-  assert.deepEqual(booths.calls.map((c) => c[0]), ['open', 'goLive', 'playVideo', 'stopVideo', 'setStart', 'setStart', 'setVisit', 'end', 'close']);
+  const key = await hostKey(roomFromLink(r.watch_url), HOST_PW);
+  assert.deepEqual(booths.calls.map((c) => c[0]), ['open', 'goLive', 'playVideo', 'stopVideo', 'setStart', 'setStart', 'end', 'close']);
   assert.deepEqual(booths.calls[0], ['open', r.meeting_id, key.verifier, 'Pastor Kim']);
   assert.deepEqual(booths.calls[5], ['setStart', null]);
 });
@@ -146,6 +144,9 @@ test('join_broadcast puts the note-taking bot in as a viewer; a meeting link is 
   const j = json(await call('join_broadcast', { link: r.watch_url }));
   assert.equal(j.state, 'live');
   assert.equal(bot.calls[0][0], 'join');
+  // The /cast/<room>/<verifier> form GifOS hands out is a broadcast link too.
+  const cast = json(await call('join_broadcast', { link: 'https://gifos.app/cast/svc123/' + 'a'.repeat(24) }));
+  assert.equal(cast.state, 'live');
   const notBc = await call('join_broadcast', { link: 'http://127.0.0.1:19510/run.html#v=abc' });
   assert.equal(notBc.isError, true);
   assert.match(text(notBc), /broadcast link/);

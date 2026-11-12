@@ -2,7 +2,7 @@
 // this computer. It holds the host key for as long as it is open (derived
 // from the host password, never stored) and drives the GifOS page the way a
 // host does: go live, play a video into the broadcast (viewers see
-// Prerecorded), set the start time and the Visit link, end the broadcast.
+// Prerecorded), set the start time, end the broadcast.
 //
 // Each booth is its own browser context (its own GifOS profile, gone when
 // the booth closes). Nothing here talks to anything but the GifOS site and
@@ -138,7 +138,6 @@ export class Booth {
         camera_on: !!(cam && !cam.classList.contains('off')),
         mic_on: !!(document.getElementById('mic') && !document.getElementById('mic').classList.contains('off')),
         start_label: txt('bcwhen-lbl'),
-        visit_label: txt('bcvisit-lbl'),
         // Left, or (a recorded service) the ended sheet with its seat kept.
         left: !!(left && left.style.display === 'flex') || !!document.getElementById('se-leave'),
       };
@@ -156,7 +155,6 @@ export class Booth {
       watching: s.watching,
       status: s.status,
       start: s.start_label,
-      visit: s.visit_label,
       ended: this.ended || s.left,
       page_errors: this.errors.slice(-3),
     };
@@ -173,20 +171,32 @@ export class Booth {
     throw new Error(what + ' (the booth reads ' + JSON.stringify({ badge: last && last.badge, air: last && last.air, status: last && last.status }) + ').');
   }
 
+  // GIFOS_MCP_SHOTS: a screenshot of the host page when a step fails.
+  async shot(name) {
+    const dir = this.pool.cfg.shotsDir;
+    if (!dir || !this.page) return;
+    try { fs.mkdirSync(dir, { recursive: true }); await this.page.screenshot({ path: path.join(dir, 'booth-' + name + '.png') }); } catch (e) { /* best effort */ }
+  }
+
   need() {
     if (this.closed || !this.page) throw new Error('The booth for this broadcast is not open. Call open_booth first.');
     if (this.ended) throw new Error('This broadcast has ended.');
   }
 
   // The host's camera on: the broadcast is live for everyone watching.
-  async goLive() {
+  // blur: 2 Max blur (default), 1 Min blur, 0 No blur. GifOS 0.9.26 turns a
+  // camera on only through that choice (Camera opens Max / Min / No blur).
+  async goLive(blur = 2) {
     this.need();
     const now = await this.state();
     if (now.on_air && !now.prerecorded) return now;
-    await this.page.evaluate(() => {
-      for (const id of ['cam', 'mic']) { const b = document.getElementById(id); if (b && b.classList.contains('off')) b.click(); }
-    });
-    return this.waitState((s) => s.on_air, 'The broadcast did not go live. This computer may have no camera; play_video plays a file instead', 20000);
+    await this.page.evaluate((lvl) => {
+      for (const id of ['mic', 'cam']) { const b = document.getElementById(id); if (b && b.classList.contains('off')) b.click(); }
+      const pick = document.querySelector('[data-cam-blur="' + lvl + '"]');
+      if (pick && pick.offsetParent !== null) pick.click();
+    }, blur);
+    return this.waitState((s) => s.on_air, 'The broadcast did not go live. This computer may have no camera; play_video plays a file instead', 20000)
+      .catch(async (e) => { await this.shot('go-live-failed'); throw e; });
   }
 
   // A video file from this computer, played live into the broadcast.
@@ -222,17 +232,6 @@ export class Booth {
       }
       el.dispatchEvent(new Event('change'));
     }, at == null ? null : Number(at));
-    return this.state();
-  }
-
-  async setVisit(url) {
-    this.need();
-    await this.page.evaluate((u) => {
-      const el = document.getElementById('bcvisit');
-      if (!el) throw new Error('This GifOS has no Visit link for a broadcast.');
-      el.value = u || '';
-      el.dispatchEvent(new Event('change'));
-    }, url || '');
     return this.state();
   }
 

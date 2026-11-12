@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // End to end: this server over stdio runs a broadcast's host booth on a
-// real GifOS 0.9.23b site, a separate headless browser watches as a viewer,
+// real GifOS 0.9.26 site, a separate headless browser watches as a viewer,
 // and Meeting Bot watches too and writes down what the host says. Each
 // check reads what the viewer's own page, or the bot's lines, show.
 //
@@ -109,8 +109,8 @@ try {
   };
 
   const startAt = new Date(Date.now() + 2 * 3600 * 1000 + 5 * 60 * 1000).toISOString();
-  const made = await call('create_broadcast', { title: 'Booth test', host_password: HOST_PW, start: startAt, visit_url: 'https://example.org/visit' });
-  check('create_broadcast gives a watch link with the start and Visit', /bc=1/.test(made.watch_url) && /at=\d+/.test(made.watch_url) && /visit=/.test(made.watch_url), made.watch_url);
+  const made = await call('create_broadcast', { title: 'Booth test', host_password: HOST_PW, start: startAt });
+  check('create_broadcast gives a watch link with the start (no Visit link in 0.9.26)', /bc=1/.test(made.watch_url) && /at=\d+/.test(made.watch_url) && !/visit=/.test(made.watch_url), made.watch_url);
 
   // A viewer early: the link alone says when it starts.
   viewerBrowser = (await launchInstalled((o) => chromium.launch(o), { args: ['--autoplay-policy=no-user-gesture-required'] }, {})).browser;

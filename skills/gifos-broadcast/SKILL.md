@@ -1,8 +1,8 @@
 ---
 name: gifos-broadcast
 description: >-
-  Make GifOS broadcasts (a service, a stream to friends) with everything an invite needs, run the host booth
-  (go live, play a video live, set the start time and the Visit link, end the broadcast), and follow what is
+  Make GifOS broadcasts (go live now or schedule) with everything an invite needs, run the host booth
+  (go live, play a video live, set the start time, end the broadcast), and follow what is
   said with a note-taking bot. Use when the user wants to set up, announce, schedule, go live with, play a
   recording into, or end a GifOS broadcast or livestream.
 metadata:
@@ -20,8 +20,8 @@ is not clearly what they asked for.
 ## Make a broadcast (no join, nothing live, nothing sent)
 
 1. `create_broadcast` with `title`, the user's `host_password`, and when known `start`, `end`, `timezone`
-   (IANA), `description`, `visit_url` (https) and `host_name`. `stream: true` makes it "Stream to friends".
-2. The result has `watch_url` and `invite`: `title`, start and end with time zone, the link, Visit, `admit`,
+   (IANA), `description` and `host_name`.
+2. The result has `watch_url` and `invite`: `title`, start and end with time zone, the link, `admit`,
    `roles`, ready-to-send `text`, `calendar` fields. Viewers who open the link early see a countdown and Add
    to calendar; anyone who opens it after it ends reads that it ended.
 3. **You send the invite** with the user's own mail, calendar or social connector, after the user approves.
@@ -33,7 +33,7 @@ is not clearly what they asked for.
 - `go_live`: the host camera and microphone of this computer go out to everyone watching.
 - `play_video` with a file path: a video plays live into the broadcast; viewers see Prerecorded.
   `stop_video` stops it.
-- `set_start_time`, `set_visit_link`: change what viewers see.
+- `set_start_time`: change what viewers see.
 - `end_broadcast`: ends it for everyone and closes the booth. `booth_status` reads the state.
 
 If the user goes live from their own phone or computer instead, they open the same link with the host

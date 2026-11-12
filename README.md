@@ -3,7 +3,7 @@
 # gifos-broadcast-mcp: GifOS broadcasts for Grok Bot
 
 `gifos-broadcast-mcp` is an [MCP](https://modelcontextprotocol.io) server that lets Grok Bot (or any MCP client)
-make [GifOS](https://gifos.app) broadcasts (a service, a stream to friends) with everything an invite needs,
+make [GifOS](https://gifos.app) broadcasts (go live now or schedule) with everything an invite needs,
 run the host's booth, and follow what is said with a note-taking bot.
 
 It runs **on your own computer** (self-run only; there is no hosted MCP URL). Broadcasts go out over GifOS's own
@@ -14,7 +14,7 @@ The shared parts (the bot, transcripts, Kokoro, links and invite details) are
 [gifos-mcp-core](https://github.com/nwcnwc/gifos-mcp-core), pinned to an exact commit. Its sibling for meetings
 is [gifos-meet-mcp](https://github.com/nwcnwc/gifos-meet-mcp).
 
-> **Requires GifOS 0.9.23b or newer** (broadcast start time, Visit, Rebroadcast with Prerecorded, Meeting Bot
+> **Requires GifOS 0.9.25 or newer** (works with 0.9.25 and 0.9.26; broadcast start time, Questions, Rebroadcast with Prerecorded, Meeting Bot
 > contract version 2).
 
 ## How it works
@@ -29,14 +29,14 @@ Grok Bot ──MCP (stdio)──▶ gifos-broadcast-mcp ─┬▶ booth: the hos
   that viewers will see or hear the result, so the caller can check with its user first.
 - **Scheduling without joining.** `create_broadcast` mints the watch link (the host's link too: the host goes
   live from it with the host password) and returns every invite detail: title, start and end with time zone,
-  the link, the Visit link, description, how viewers get in, who does what, and ready-to-send text. Viewers who
+  the link, description, how viewers get in, who does what, and ready-to-send text. Viewers who
   open the link early see when it starts, a countdown and Add to calendar (made on their own device); anyone who
   opens it after the end reads that it ended. Nothing goes live and nothing is sent.
 - **The booth** is the host's seat on this computer. `open_booth` needs the host password (to derive the host
   key; it is held in memory while the booth is open and never stored) and opens off air. `go_live` turns this
   computer's camera and microphone on for everyone watching. `play_video` plays a video file live into the
   broadcast; viewers see **Prerecorded** and cannot skip or save it (no per-viewer downloads). `set_start_time`
-  and `set_visit_link` change what viewers see. `end_broadcast` ends it for everyone.
+  changes what viewers see. `end_broadcast` ends it for everyone.
 - **Notes.** `join_broadcast` puts Meeting Bot in as a viewer; it writes down what is said on the Stage, credited
   by name. `wait_lines` returns each line the moment it lands.
 - **Speech** is [Kokoro](https://github.com/hexgrad/kokoro) (kokoro-js 1.2.1) with its default voice, for `say`.
@@ -119,7 +119,7 @@ like any person's picture and nowhere else.
 
 | Variable | Default | What it does |
 |---|---|---|
-| `GIFOS_URL` | `https://gifos.app` | The GifOS site. It must be 0.9.23b or newer. |
+| `GIFOS_URL` | `https://gifos.app` | The GifOS site. It must be 0.9.25 or newer. |
 | `GIFOS_RELAY` | GifOS default | A custom relay (`wss://…`), added to meeting links. |
 | `GIFOS_BOT_NAME` | generated | The name people see on the bot's tile (3 to 40 characters). Set alone, it keeps the stored password. |
 | `GIFOS_BOT_PASSWORD` | generated | The bot's password (the secret half). A `bot.json` that cannot be read is kept as `bot.json.bad-<ms>` and a new pair is generated. |
@@ -152,15 +152,14 @@ Broadcast tools (this server):
 
 | Tool | Arguments | Returns |
 |---|---|---|
-| `create_broadcast` | `title`, `host_password`, `start?`, `end?`, `timezone?`, `description?`, `visit_url?`, `stream?`, `host_name?` | `{ meeting_id, watch_url, invite }`. Nothing goes live, joins or is sent. |
+| `create_broadcast` | `title`, `host_password`, `start?`, `end?`, `timezone?`, `description?`, `host_name?` | `{ meeting_id, watch_url, invite }`. Nothing goes live, joins or is sent. |
 | `open_booth` | `meeting_id` or `link`, `host_password`, `host_name?` | Opens the host's seat on this computer, off air. Refuses a host password the broadcast was not made with. |
 | `go_live` | `meeting_id` | Starts the live broadcast: this computer's camera and microphone go out to everyone watching. |
 | `play_video` | `meeting_id`, `path` | Plays a video file live into the broadcast now; viewers see Prerecorded. |
 | `stop_video` | `meeting_id` | Stops it. |
 | `set_start_time` | `meeting_id`, `start`, `timezone?` | What early viewers see (countdown, Add to calendar). Empty clears it. |
-| `set_visit_link` | `meeting_id`, `url` | The https Visit link on the picture and the ended card. Empty clears it. |
 | `end_broadcast` | `meeting_id` | Ends the broadcast for everyone; viewers read that it ended; the booth closes. |
-| `booth_status` | `meeting_id` | Open, on air, camera, microphone, video, watching, start time and Visit as the host page shows them. |
+| `booth_status` | `meeting_id` | Open, on air, camera, microphone, video, watching, and start time as the host page shows them. |
 | `close_booth` | `meeting_id` | Closes the booth without the End step. |
 | `join_broadcast` | `link`, `topic?` | Meeting Bot watches the broadcast and writes down what is said. |
 
@@ -187,9 +186,9 @@ The resource `gifos://meeting/{id}/transcript` is the live transcript as newline
 
 ## Example: a Monday broadcast
 
-1. The user says: *"Set up our Monday all-hands at 10, with the visit link, and tell the team."*
+1. The user says: *"Set up our Monday all-hands at 10, and tell the team."*
    Grok Bot calls `create_broadcast({ title: "Monday all-hands", host_password, start: "2026-10-25T10:00",
-   timezone: "America/Chicago", visit_url: "https://example.org/visit" })` and sends `invite.text` through the
+   timezone: "America/Chicago" })` and sends `invite.text` through the
    user's own channels after the user approves.
 2. At 9:55 Grok Bot calls `open_booth` and `join_broadcast`. When the user says go, `go_live`.
 3. During the broadcast Grok Bot follows `wait_lines`. Afterwards, `end_broadcast` (after checking with the user)
@@ -239,9 +238,9 @@ The resource `gifos://meeting/{id}/transcript` is the live transcript as newline
 
 | Symptom | Fix |
 |---|---|
-| `The booth did not become the host of this broadcast` | The host password is not this broadcast's, or the site is older than 0.9.23b. |
+| `The booth did not become the host of this broadcast` | The host password is not this broadcast's, or the site is older than 0.9.25. |
 | `The broadcast did not go live. This computer may have no camera` | Use `play_video`, or set `GIFOS_BOOTH_CAMERA_FILE`. |
-| `This GifOS has no Rebroadcast` | The site is older than 0.9.23b. |
+| `This GifOS has no Rebroadcast` | The site is older than 0.9.25. |
 | `Kokoro: … does not match its pinned SHA-256` | A download was cut or a mirror served other bytes. The file was removed; start again. |
 | `No Chrome or Edge on this computer` | Install Google Chrome, or run `npx playwright install chromium` once, or set `GIFOS_CHROME`. The server never downloads a browser. |
 | Anything else | `GIFOS_HEADLESS=0` shows the browser windows. |
@@ -265,9 +264,8 @@ every booth action is one call with no confirmation argument.
 **2. Full end-to-end test against a local GifOS** (what the maintainers run; see [runs/](runs/)).
 
 ```sh
-git clone --branch release/0.9.23 --single-branch https://github.com/nwcnwc/gifos-app.git ../gifos-app
-git clone https://github.com/nwcnwc/gifos-apps-source.git ../gifos-apps-source
-GIFOS_APP_DIR=../gifos-app MEETING_BOT_SRC=../gifos-apps-source/meeting-bot \
+git clone --branch release/0.9.26 --single-branch https://github.com/nwcnwc/gifos-app.git ../gifos-app
+GIFOS_APP_DIR=../gifos-app \
 E2E_VIDEO=/path/to/short-clip.webm npm run test:e2e
 ```
 
@@ -280,4 +278,4 @@ viewer sees the picture), Meeting Bot writing down the host's words through `wai
 
 ## License
 
-Copyright (c) 2026 Crowd Concepts, Inc. All rights reserved. See [LICENSE](LICENSE). GifOS, Meeting Bot and Kokoro are separate projects with their own licenses.
+MIT License. Copyright (c) 2026 Crowd Concepts, Inc. See [LICENSE](LICENSE). GifOS, Meeting Bot and Kokoro are separate projects with their own licenses.
